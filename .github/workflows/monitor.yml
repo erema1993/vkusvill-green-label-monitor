@@ -5,6 +5,12 @@ on:
     # Каждые 10 минут, со сдвигом от перегруженного начала часа.
     - cron: "3,13,23,33,43,53 * * * *"
   workflow_dispatch:
+    inputs:
+      send_test:
+        description: "Send a Telegram test message only"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -21,6 +27,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Restore previous product IDs
+        if: ${{ inputs.send_test != true }}
         uses: actions/cache/restore@v5
         with:
           path: state.json
@@ -29,6 +36,7 @@ jobs:
             vv-state-
 
       - name: Check VkusVill
+        if: ${{ inputs.send_test != true }}
         env:
           VV_COOKIE: ${{ secrets.VV_COOKIE }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -36,8 +44,15 @@ jobs:
           STATE_HASH_KEY: ${{ secrets.STATE_HASH_KEY }}
         run: python3 monitor.py
 
+      - name: Send Telegram test
+        if: ${{ inputs.send_test == true }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 monitor.py --send-test
+
       - name: Save current product IDs
-        if: success()
+        if: ${{ success() && inputs.send_test != true }}
         uses: actions/cache/save@v5
         with:
           path: state.json
