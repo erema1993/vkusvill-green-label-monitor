@@ -1,0 +1,12 @@
+.env
+state.json
+__pycache__/
+*.pyc
+.dev.vars
+.wrangler/
+node_modules/
+worker.js
+worker.test.js
+wrangler.jsonc
+package.json
+package-lock.json

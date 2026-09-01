@@ -1,0 +1,44 @@
+name: Monitor green labels
+
+on:
+  schedule:
+    # Каждые 10 минут, со сдвигом от перегруженного начала часа.
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vkusvill-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore previous product IDs
+        uses: actions/cache/restore@v4
+        with:
+          path: state.json
+          key: vv-state-${{ github.run_id }}
+          restore-keys: |
+            vv-state-
+
+      - name: Check VkusVill
+        env:
+          VV_COOKIE: ${{ secrets.VV_COOKIE }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATE_HASH_KEY: ${{ secrets.STATE_HASH_KEY }}
+        run: python3 monitor.py
+
+      - name: Save current product IDs
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: state.json
+          key: vv-state-${{ github.run_id }}
