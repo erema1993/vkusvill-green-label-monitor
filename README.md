@@ -33,6 +33,6 @@ python3 monitor.py
 
 ## Облачный запуск
 
-GitHub Actions запускает `monitor.py` каждые 10 минут по файлу `.github/workflows/monitor.yml`. Cookies и параметры Telegram хранятся только в GitHub Actions Secrets. Текущий список товаров сохраняется в Actions cache только в виде HMAC-хешей; первый облачный запуск создаёт базу без уведомлений обо всех старых товарах.
+GitHub Actions запускает `monitor.py` каждые 5 минут по файлу `.github/workflows/monitor.yml`. Cookies и параметры Telegram хранятся только в GitHub Actions Secrets. Текущий список товаров сохраняется в Actions cache только в виде HMAC-хешей; первый облачный запуск создаёт базу без уведомлений обо всех старых товарах.
 
 Запланированные workflow публичного репозитория GitHub автоматически отключаются после 60 дней без активности. В таком случае откройте вкладку Actions и включите workflow снова.
