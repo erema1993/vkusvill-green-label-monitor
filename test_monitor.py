@@ -1,5 +1,6 @@
 import unittest
-from monitor import ProductParser, nutrition_summary, parse_nutrition, product_message
+from unittest.mock import patch
+from monitor import ProductParser, fetch_product_page, nutrition_summary, parse_nutrition, product_message
 
 
 class ParserTest(unittest.TestCase):
@@ -62,6 +63,11 @@ class ParserTest(unittest.TestCase):
                 "kcal":100, "protein":5, "fat":4, "carbs":3, "approx":False}})
         self.assertIn("80 ₽ (40%)", caption)
         self.assertIn("Лиговский проспект, 232", caption)
+
+    def test_product_page_error_has_context(self):
+        with patch("monitor.open_https", side_effect=OSError("forbidden")):
+            with self.assertRaisesRegex(RuntimeError, "страницу товара"):
+                fetch_product_page("https://vkusvill.ru/goods/test/", "cookie")
 
 
 if __name__ == "__main__":

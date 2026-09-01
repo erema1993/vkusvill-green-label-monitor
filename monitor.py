@@ -127,8 +127,11 @@ def fetch_products(cookie: str) -> list[dict]:
         "User-Agent": "Mozilla/5.0",
         "X-Requested-With": "XMLHttpRequest",
     })
-    with open_https(request) as response:
-        payload = json.load(response)
+    try:
+        with open_https(request) as response:
+            payload = json.load(response)
+    except Exception as exc:
+        raise RuntimeError(f"Не удалось получить cart_green_labels: {exc}") from exc
     if payload.get("success") != "Y":
         raise RuntimeError(f"ВкусВилл вернул success={payload.get('success')!r}")
     parser = ProductParser()
@@ -145,8 +148,11 @@ def fetch_product_page(url: str, cookie: str) -> str:
         "Referer": "https://vkusvill.ru/cart/",
         "User-Agent": "Mozilla/5.0",
     })
-    with open_https(request) as response:
-        return response.read().decode(response.headers.get_content_charset() or "utf-8", errors="replace")
+    try:
+        with open_https(request) as response:
+            return response.read().decode(response.headers.get_content_charset() or "utf-8", errors="replace")
+    except Exception as exc:
+        raise RuntimeError(f"Не удалось открыть страницу товара {url}: {exc}") from exc
 
 
 def parse_nutrition(source: str) -> list[dict]:
@@ -298,7 +304,10 @@ def main() -> int:
     for product in new:
         cache_key = state_id(product["id"])
         if cache_key not in nutrition_cache and product.get("href"):
-            nutrition_cache[cache_key] = nutrition_summary(parse_nutrition(fetch_product_page(product["href"], cookie)))
+            try:
+                nutrition_cache[cache_key] = nutrition_summary(parse_nutrition(fetch_product_page(product["href"], cookie)))
+            except Exception as exc:
+                print(f"Предупреждение: КБЖУ товара {product['id']} недоступно: {exc}", file=sys.stderr)
         product["nutrition"] = nutrition_cache.get(cache_key)
         caption = product_message(product)
         if product.get("image"):
